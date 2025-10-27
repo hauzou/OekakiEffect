@@ -80,11 +80,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioContext;
 
     const effects = [
-        { name: 'rotate-cw', type: 'animation' }, { name: 'rotate-y', type: 'animation' },
-        { name: 'scale-up-2', type: 'animation' }, { name: 'pulse', type: 'animation' },
-        { name: 'jump', type: 'animation' }, { name: 'swing', type: 'animation' },
-        { name: 'fade-out-in', type: 'animation' }, { name: 'blur', type: 'animation' },
-        { name: 'particles-sparkle', type: 'special' },
+        { name: 'rotate-cw', type: 'animation' }, { name: 'rotate-ccw', type: 'animation' },
+        { name: 'spin-fast', type: 'animation' }, { name: 'rotate-y', type: 'animation' },
+        { name: 'rotate-x', type: 'animation' }, { name: 'rotate-180', type: 'animation' },
+        { name: 'bow', type: 'animation' }, { name: 'swing', type: 'animation' },
+        { name: 'scale-up-2', type: 'animation' }, { name: 'scale-up-1.5', type: 'animation' },
+        { name: 'scale-down-0.5', type: 'animation' }, { name: 'scale-down-0.1', type: 'animation' },
+        { name: 'pulse', type: 'animation' }, { name: 'stretch-x', type: 'animation' },
+        { name: 'stretch-y', type: 'animation' }, { name: 'inflate', type: 'animation' },
+        { name: 'jump', type: 'animation' }, { name: 'high-jump', type: 'animation' },
+        { name: 'slide-right', type: 'animation' }, { name: 'slide-left', type: 'animation' },
+        { name: 'draw-circle', type: 'animation' }, { name: 'bounce-down', type: 'animation' },
+        { name: 'float', type: 'animation' }, { name: 'warp', type: 'animation' },
+        { name: 'blink-3', type: 'animation' }, { name: 'blink-slow', type: 'animation' },
+        { name: 'fade-out-in', type: 'animation' }, { name: 'outline', type: 'animation' },
+        { name: 'blur', type: 'animation' }, { name: 'add-shadow', type: 'animation' },
+        { name: 'sepia', type: 'animation' }, { name: 'grayscale', type: 'animation' },
+        { name: 'particles-sparkle', type: 'special' }, { name: 'particles-heart', type: 'special' },
+        { name: 'split-2', type: 'special' }, { name: 'split-3', type: 'special' },
+        { name: 'color-red', type: 'color' }, { name: 'color-blue', type: 'color' },
+        { name: 'color-yellow', type: 'color' }, { name: 'color-green', type: 'color' },
+        { name: 'color-orange', type: 'color' }, { name: 'color-pink', type: 'color' },
+        { name: 'color-purple', type: 'color' }, { name: 'color-cyan', type: 'color' },
+        { name: 'color-gold', type: 'color' }, { name: 'color-rainbow', type: 'animation' },
     ];
 
     function initAudio() {
@@ -105,12 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
         o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + 0.8);
     }
 
-    function createParticles(item) {
+    function createParticles(item, type = 'sparkle') {
         const rect = item.getBoundingClientRect();
         const originX = rect.left + rect.width / 2, originY = rect.top + rect.height / 2;
         for (let i = 0; i < 15; i++) {
             const p = document.createElement('div');
-            p.classList.add('particle');
+            p.classList.add('particle', type);
             p.style.left = `${originX}px`; p.style.top = `${originY}px`;
             const angle = Math.random() * 360, distance = Math.random() * 80 + 20;
             p.style.setProperty('--tx', `${Math.cos(angle * Math.PI / 180) * distance}px`);
@@ -120,18 +138,48 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => p.remove(), 1000);
         }
     }
+    
+    function createSplit(item, count) {
+        const rect = item.getBoundingClientRect();
+        item.style.opacity = 0;
+        for (let i = 0; i < count; i++) {
+            const clone = document.createElement('div');
+            clone.className = item.className.replace('user-item', 'split-clone');
+            clone.style.left = `${rect.left}px`;
+            clone.style.top = `${rect.top}px`;
+            clone.style.backgroundImage = item.style.backgroundImage;
+
+            const angle = (360 / count) * i;
+            const distance = 60;
+            clone.style.setProperty('--tx', `${Math.cos(angle * Math.PI / 180) * distance}px`);
+            clone.style.setProperty('--ty', `${Math.sin(angle * Math.PI / 180) * distance}px`);
+            clone.style.animation = `split-anim 0.8s ease-out forwards`;
+            app.appendChild(clone);
+            setTimeout(() => clone.remove(), 800);
+        }
+        setTimeout(() => item.style.opacity = 1, 800);
+    }
 
     function applyEffect(item) {
         const randomEffect = effects[Math.floor(Math.random() * effects.length)];
         playRandomSound();
-        const classesToRemove = effects.filter(e => e.type === 'animation').map(e => e.name);
+        const classesToRemove = effects.map(e => e.name);
         item.classList.remove(...classesToRemove);
         void item.offsetWidth;
+
         if (randomEffect.type === 'special') {
-            if (randomEffect.name === 'particles-sparkle') createParticles(item);
-        } else if (randomEffect.type === 'animation') {
+            if (randomEffect.name === 'particles-sparkle') createParticles(item, 'sparkle');
+            if (randomEffect.name === 'particles-heart') createParticles(item, 'heart');
+            if (randomEffect.name === 'split-2') createSplit(item, 2);
+            if (randomEffect.name === 'split-3') createSplit(item, 3);
+        } else if (randomEffect.type === 'animation' || randomEffect.type === 'color') {
             item.classList.add(randomEffect.name);
-            item.addEventListener('animationend', () => item.classList.remove(randomEffect.name), { once: true });
+            item.addEventListener('animationend', () => {
+                item.classList.remove(randomEffect.name);
+            }, { once: true });
+             if (randomEffect.type === 'color') {
+                setTimeout(() => item.classList.remove(randomEffect.name), 1000); // カラーエフェクトは一定時間で消す
+            }
         }
     }
 
@@ -139,20 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const item = document.createElement('div');
         item.classList.add('user-item');
         item.style.backgroundImage = `url(${imageURL})`;
-        
         const appRect = app.getBoundingClientRect();
         const x = Math.random() * (appRect.width - 200);
         const y = Math.random() * (appRect.height - 200);
         item.style.left = `${x}px`;
         item.style.top = `${y}px`;
-
         app.appendChild(item);
     }
 
-    // --- ドラッグ処理（マウスとタッチを完全に分離） ---
+    // --- ドラッグ処理 ---
 
     function startDrag(e) {
         if (e.target.classList.contains('user-item')) {
+            e.preventDefault(); // マウスとタッチ両方で呼び出す
             activeItem = e.target;
             initAudio();
             if (audioContext && audioContext.state === 'suspended') audioContext.resume();
@@ -166,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drag(e) {
         if (activeItem) {
+            e.preventDefault(); // マウスとタッチ両方で呼び出す
             const touch = e.touches ? e.touches[0] : e;
-            let x = touch.clientX - offsetX;
-            let y = touch.clientY - offsetY;
+            let x = touch.clientX - offsetX, y = touch.clientY - offsetY;
             const itemSize = activeItem.offsetWidth;
             x = Math.max(0, Math.min(x, window.innerWidth - itemSize));
             y = Math.max(0, Math.min(y, window.innerHeight - itemSize));
@@ -177,29 +224,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function endDrag() {
-        if (activeItem) {
-            activeItem.classList.remove('dragging');
-            applyEffect(activeItem);
-            activeItem = null;
-        }
-    }
-
-    // マウスイベント
     app.addEventListener('mousedown', startDrag);
     app.addEventListener('mousemove', drag);
     app.addEventListener('mouseup', endDrag);
     app.addEventListener('mouseleave', endDrag);
-
-    // タッチイベント
-    app.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        startDrag(e);
-    }, { passive: false });
-    app.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        drag(e);
-    }, { passive: false });
+    app.addEventListener('touchstart', startDrag, { passive: false });
+    app.addEventListener('touchmove', drag, { passive: false });
     app.addEventListener('touchend', endDrag);
     app.addEventListener('touchcancel', endDrag);
 });
