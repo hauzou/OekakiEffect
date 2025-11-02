@@ -71,7 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function isCanvasBlank(canvas) {
-        return !ctx.getImageData(0, 0, canvas.width, canvas.height).data.some(channel => channel !== 0);
+        const context = canvas.getContext('2d');
+        const pixelBuffer = new Uint32Array(
+            context.getImageData(0, 0, canvas.width, canvas.height).data.buffer
+        );
+        return !pixelBuffer.some(color => color !== 0);
     }
 
     // --- アイテムとエフェクト処理 ---
@@ -174,11 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (randomEffect.name === 'split-3') createSplit(item, 3);
         } else if (randomEffect.type === 'animation' || randomEffect.type === 'color') {
             item.classList.add(randomEffect.name);
-            item.addEventListener('animationend', () => {
-                item.classList.remove(randomEffect.name);
-            }, { once: true });
-             if (randomEffect.type === 'color') {
-                setTimeout(() => item.classList.remove(randomEffect.name), 1000); // カラーエフェクトは一定時間で消す
+            const listener = () => {
+                if(randomEffect.type !== 'color') {
+                    item.classList.remove(randomEffect.name);
+                }
+            };
+            item.addEventListener('animationend', listener, { once: true });
+            if (randomEffect.type === 'color') {
+                setTimeout(() => item.classList.remove(randomEffect.name), 1000);
             }
         }
     }
@@ -196,31 +203,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- ドラッグ処理 ---
-
     function startDrag(e) {
         if (e.target.classList.contains('user-item')) {
-            e.preventDefault(); // マウスとタッチ両方で呼び出す
+            e.preventDefault();
             activeItem = e.target;
             initAudio();
             if (audioContext && audioContext.state === 'suspended') audioContext.resume();
             activeItem.classList.add('dragging');
-            const touch = e.touches ? e.touches[0] : e;
+            const pointer = e.touches ? e.touches[0] : e;
             const rect = activeItem.getBoundingClientRect();
-            offsetX = touch.clientX - rect.left;
-            offsetY = touch.clientY - rect.top;
+            offsetX = pointer.clientX - rect.left;
+            offsetY = pointer.clientY - rect.top;
         }
     }
 
     function drag(e) {
         if (activeItem) {
-            e.preventDefault(); // マウスとタッチ両方で呼び出す
-            const touch = e.touches ? e.touches[0] : e;
-            let x = touch.clientX - offsetX, y = touch.clientY - offsetY;
+            e.preventDefault();
+            const pointer = e.touches ? e.touches[0] : e;
+            if (pointer.clientX === undefined || pointer.clientY === undefined) return;
+            let x = pointer.clientX - offsetX;
+            let y = pointer.clientY - offsetY;
             const itemSize = activeItem.offsetWidth;
             x = Math.max(0, Math.min(x, window.innerWidth - itemSize));
             y = Math.max(0, Math.min(y, window.innerHeight - itemSize));
             activeItem.style.left = `${x}px`;
             activeItem.style.top = `${y}px`;
+        }
+    }
+
+    function endDrag() {
+        if (activeItem) {
+            activeItem.classList.remove('dragging');
+            applyEffect(activeItem);
+            activeItem = null;
         }
     }
 
