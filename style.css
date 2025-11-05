@@ -53,9 +53,12 @@ html, body {
     height: 200px;
     cursor: grab;
     user-select: none;
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
     transition: transform 0.2s ease-out, opacity 0.5s ease;
 }
 
@@ -131,7 +134,7 @@ html, body {
 .fade-out-in { animation: fade-out-in 1.2s ease-in-out; }
 @keyframes fade-out-in { 50% { opacity: 0; } 100% { opacity: 1; } }
 .outline { animation: outline 1s; }
-@keyframes outline { 50% { background-image: none; border: 2px solid #333; } 100% { border: none; } }
+@keyframes outline { 50% { background-color: transparent; border: 2px solid #333; } 100% { border: none; } }
 .blur { animation: blur 1s; }
 @keyframes blur { 50% { filter: blur(5px); } 100% { filter: blur(0); } }
 .add-shadow { animation: add-shadow 1s; }

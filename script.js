@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('何か描いてから「できた！」ボタンを押してね。');
             return;
         }
-        createDraggableItem(drawingCanvas.toDataURL());
+        const currentColor = ctx.strokeStyle;
+        createDraggableItem(drawingCanvas.toDataURL(), currentColor);
         ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
         setRandomStrokeColor();
     });
@@ -120,11 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const o = audioContext.createOscillator(), g = audioContext.createGain();
         const freq = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
         o.type = 'sine';
-        o.frequency.setValueAtTime(freq[Math.floor(Math.random() * freq.length)], audioCtx.currentTime);
-        g.gain.setValueAtTime(0.3, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
-        o.connect(g); g.connect(audioCtx.destination);
-        o.start(audioCtx.currentTime); o.stop(audioCtx.currentTime + 0.8);
+        o.frequency.setValueAtTime(freq[Math.floor(Math.random() * freq.length)], audioContext.currentTime);
+        g.gain.setValueAtTime(0.3, audioContext.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.8);
+        o.connect(g); g.connect(audioContext.destination);
+        o.start(audioContext.currentTime); o.stop(audioContext.currentTime + 0.8);
     }
 
     function createParticles(item, type = 'sparkle') {
@@ -151,7 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
             clone.className = item.className.replace('user-item', 'split-clone');
             clone.style.left = `${rect.left}px`;
             clone.style.top = `${rect.top}px`;
-            clone.style.backgroundImage = item.style.backgroundImage;
+            clone.style.webkitMaskImage = item.style.webkitMaskImage;
+            clone.style.maskImage = item.style.maskImage;
+            clone.style.backgroundColor = window.getComputedStyle(item).backgroundColor;
 
             const angle = (360 / count) * i;
             const distance = 60;
@@ -190,10 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function createDraggableItem(imageURL) {
+    function createDraggableItem(imageURL, color) {
         const item = document.createElement('div');
         item.classList.add('user-item');
-        item.style.backgroundImage = `url(${imageURL})`;
+        item.style.backgroundColor = color;
+        item.style.webkitMaskImage = `url(${imageURL})`;
+        item.style.maskImage = `url(${imageURL})`;
         const appRect = app.getBoundingClientRect();
         const x = Math.random() * (appRect.width - 200);
         const y = Math.random() * (appRect.height - 200);
